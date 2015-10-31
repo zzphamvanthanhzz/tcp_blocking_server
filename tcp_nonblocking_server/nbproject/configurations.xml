@@ -34,10 +34,14 @@
         <ccTool>
           <incDir>
             <pElem>inc</pElem>
+            <pElem>../../../../Netbeans/svn_vng/xallocatorlib/inc</pElem>
           </incDir>
         </ccTool>
         <linkerTool>
           <output>../bin/tcp_nonblocking_server</output>
+          <linkerLibItems>
+            <linkerLibFileItem>../../../../Netbeans/svn_vng/xallocatorlib/lib/libxallocator.a</linkerLibFileItem>
+          </linkerLibItems>
         </linkerTool>
       </compileType>
       <item path="src/tcp_nonblocking_server.cpp" ex="false" tool="1" flavor2="0">
@@ -57,6 +61,7 @@
           <developmentMode>5</developmentMode>
           <incDir>
             <pElem>inc</pElem>
+            <pElem>../../../../Netbeans/svn_vng/xallocatorlib/inc</pElem>
           </incDir>
         </ccTool>
         <fortranCompilerTool>
@@ -67,6 +72,9 @@
         </asmTool>
         <linkerTool>
           <output>../bin/tcp_nonblocking_server</output>
+          <linkerLibItems>
+            <linkerLibFileItem>../../../../Netbeans/svn_vng/xallocatorlib/lib/libxallocator.a</linkerLibFileItem>
+          </linkerLibItems>
         </linkerTool>
       </compileType>
       <item path="src/tcp_nonblocking_server.cpp" ex="false" tool="1" flavor2="0">

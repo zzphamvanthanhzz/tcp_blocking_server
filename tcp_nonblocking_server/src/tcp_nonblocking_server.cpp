@@ -2,85 +2,90 @@
  * File:   tcp_nonblocking_server.cpp
  * Author: thanhpv
  * http://www.cs.tau.ac.il/~eddiea/samples/Non-Blocking/tcp-nonblocking-server.c.html
+ * http://www.thegeekstuff.com/2011/12/c-socket-programming/
+ * Error temporary source: http://stackoverflow.com/questions/14370489/what-can-cause-a-resource-temporarily-unavailable-on-sock-send-command#comment19984577_14370489
  * Created on October 27, 2015, 11:35 PM
  */
-
-#include <stdio.h> 
-#include <stdlib.h> 
-#include <errno.h> 
-#include <string.h> 
-#include <sys/types.h> 
-#include <netinet/in.h> 
-#include <sys/socket.h> 
-#include <sys/wait.h> 
-#include <fcntl.h>
+#include <unistd.h>
+#include <iostream>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <stdlib.h>
 #include <strings.h>
-#include <list> /* Added for the nonblocking socket */
+#include <stdio.h>
+#include <string.h>
 
-#define PORT 6060
-#define BACKLOG 10
-
+#define MAXHOSTNAME 256
 using namespace std;
 
-/*
- * 
- */
-int main(int argc, char** argv) {
-	int sockfd, new_fd; /* listen on sock_fd, new connection on new_fd */
-	struct sockaddr_in my_addr; /* my address information */
-	struct sockaddr_in their_addr; /* connector's address information */
-	int sin_size;
-	char string_read[255];
-	int n, i;
-	int last_fd; /* Thelast sockfd that is connected	*/
+main() {
+	struct sockaddr_in socketInfo;
+	char sysHost[MAXHOSTNAME + 1]; // Hostname of this computer we are running on
+	struct hostent *hPtr;
+	int socketHandle;
+	int portNumber = 8081;
 
-	if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
-		printf("Error create socket %s\n", strerror(errno));
-		return -1;
-	}
-	last_fd = sockfd;
+	bzero(&socketInfo, sizeof (sockaddr_in)); // Clear structure memory
 
-	//
-	my_addr.sin_family = AF_INET; /* host byte order */
-	my_addr.sin_port = htons(PORT); /* short, network byte order */
-	my_addr.sin_addr.s_addr = INADDR_ANY; /* Address to accept any incoming messages.  */
-	bzero(&(my_addr.sin_zero), 8); /* zero the rest of the struct */
+	// Get system information
 
-	//int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-	//Assigning a name to a socket
-	//when a socket is created with socket()
-	//it exists in a namespace (address family) but has no address assigned to it.
-	//bind() assigns the address specified by addr to the socket referred to by the file descriptor sockfd.
-	//addrlen specifies the size, in bytes, of the address structure pointed to by addr
-	if (bind(sockfd, (struct sockaddr*) &my_addr, sizeof (struct sockaddr)) == -1) {
-		printf("Error bind %s\n", strerror(errno));
-		return -1;
+	gethostname(sysHost, MAXHOSTNAME); // Get the name of this computer we are running on
+	if ((hPtr = gethostbyname(sysHost)) == NULL) {
+		cerr << "System hostname misconfigured." << endl;
+		exit(EXIT_FAILURE);
 	}
 
-	//int listen(int sockfd, int backlog);
-	//marks the socket referred to by sockfd as a passive socket
-	//as a socket that will be used to accept incoming connection requests using accept()
-	//The sockfd argument is a file descriptor that refers to a socket of type SOCK_STREAM or SOCK_SEQPACKET.
-	//The backlog argument defines the maximum length to which the queue of pending connections for sockfd may grow.
-	//If a connection request arrives when  the queue is full, the client may receive an error 
-	//with an indication of ECONNREFUSED  if the underlying protocol supports retransmission, the request may
-	//be ignored so that a later reattempt at connection succeeds.
-	if (listen(sockfd, BACKLOG) == -1) {
-		printf("Error listen %s\n", strerror(errno));
-		return -1;
+	// create socket
+
+	if ((socketHandle = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		close(socketHandle);
+		exit(EXIT_FAILURE);
 	}
 
-	//sockfd: Specifies a socket that was created with socket(), has been bound
-	//to an address with bind(), and has issued a 
-	//address: Either a null pointer, or a pointer to a sockaddr structure 
-	//where the address of the connecting socket shall be returned
-	//address_len: Points to a socklen_t structure which on input specifies the 
-	//length of the supplied sockaddr structure, and on output 
-	//specifies the length of the stored address.
-	if ((new_fd = accept(sockfd, (struct sockaddr*) &their_addr, &sin_size)) == -1) {
-		printf("Error accept %s\n", strerror(errno));
-		return -1;
+	// Load system information into socket data structures
+
+	socketInfo.sin_family = AF_INET;
+	socketInfo.sin_addr.s_addr = htonl(INADDR_ANY); // Use any address available to the system
+	socketInfo.sin_port = htons(portNumber); // Set port number
+
+	// Bind the socket to a local socket address
+
+	if (bind(socketHandle, (struct sockaddr *) &socketInfo, sizeof (socketInfo)) < 0) {
+		close(socketHandle);
+		perror("bind");
+		exit(EXIT_FAILURE);
 	}
+
+	listen(socketHandle, 5);
+
+	int socketConnection;
+	int i = 1;
+	do {
+		if ((socketConnection = accept(socketHandle, NULL, NULL)) < 0) {
+			perror("Error accept");
+			exit(EXIT_FAILURE);
+		}
+		printf("Receive Request %d\n", i);
+		int rc = 0; // Actual number of bytes read
+		char buf[512];
+
+		// rc is the number of characters returned.
+		// Note this is not typical. Typically one would only specify the number 
+		// of bytes to read a fixed header which would include the number of bytes
+		// to read. See "Tips and Best Practices" below.
+
+		rc = recv(socketConnection, buf, 512, 0);
+		buf[rc] = (char) NULL; // Null terminate string
+		//Sleep
+		sleep(5);
+		cout << "Number of bytes read: " << rc << endl;
+		cout << "Received: " << buf << endl;
+		i++;
+
+		send(socketConnection, buf, strlen(buf) + 1, 0);
+	} while (1);
 	return 0;
 }
+
 

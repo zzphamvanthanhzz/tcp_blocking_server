@@ -52,11 +52,13 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=../../../../Netbeans/svn_vng/xallocatorlib/lib/libxallocator.a
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
 	"${MAKE}"  -f nbproject/Makefile-${CND_CONF}.mk ../bin/tcp_nonblocking_server
+
+../bin/tcp_nonblocking_server: ../../../../Netbeans/svn_vng/xallocatorlib/lib/libxallocator.a
 
 ../bin/tcp_nonblocking_server: ${OBJECTFILES}
 	${MKDIR} -p ../bin
@@ -65,7 +67,7 @@ LDLIBSOPTIONS=
 ${OBJECTDIR}/src/tcp_nonblocking_server.o: src/tcp_nonblocking_server.cpp 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.cc) -O2 -Iinc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/tcp_nonblocking_server.o src/tcp_nonblocking_server.cpp
+	$(COMPILE.cc) -O2 -Iinc -I../../../../Netbeans/svn_vng/xallocatorlib/inc -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/tcp_nonblocking_server.o src/tcp_nonblocking_server.cpp
 
 # Subprojects
 .build-subprojects:
